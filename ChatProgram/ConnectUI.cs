@@ -443,8 +443,36 @@ namespace ChatProgram
         {
             try
             {
-                string sender = method.ToLower() == "socket" ? ip.ToString() + ":" + port.ToString() : comm.serialPort.PortName;
-                string recipient = method.ToLower() == "socket" ? remoteIp.ToString() + ":" + remotePort.ToString() : "";
+                string sender = "", recipient = "";
+                if (socketOrComm == 1)
+                {
+                    if (sendOrReceive == 1)
+                    {
+                        sender = ip.ToString() + ":" + port;
+                        recipient = remoteIp.ToString() + ":" + remotePort;
+                    }
+                    else if (sendOrReceive == 2)
+                    {
+                        sender = remoteIp.ToString() + ":" + remotePort;
+                        recipient = ip.ToString() + ":" + port;
+                    }
+                }
+                else if (socketOrComm == 2)
+                {
+                    if (sendOrReceive == 1)
+                    {
+                        sender = comm.serialPort.PortName;
+                        recipient = "";
+                    }
+                    else if (sendOrReceive == 2)
+                    {
+                        sender = "";
+                        recipient = comm.serialPort.PortName;
+                    }
+                }
+               
+                //string sender = method.ToLower() == "socket" ? ip.ToString() + ":" + port.ToString() : comm.serialPort.PortName;
+                //string recipient = method.ToLower() == "socket" ? remoteIp.ToString() + ":" + remotePort.ToString() : "";
                 string insertSQL = String.Format("Insert into {0} ([content], [timestamp], [sender], [recipient], [sendOrReceive], [transmission]) values('{1}', '{2}', '{3}', '{4}', {5}, {6})",
                     tableName,
                     text,
