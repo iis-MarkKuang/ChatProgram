@@ -46,23 +46,27 @@ namespace ChatProgram
             XmlElement elementConnection = (XmlElement)xmlDoc.SelectSingleNode("configuration/connection");
 
             method = elementConnection.GetAttribute("method");
-
+            
+            //根据xml文件的配置，设置数据库
             XmlElement elementDatabase = (XmlElement)xmlDoc.SelectSingleNode("configuration/database");
             SetUpDatabase(elementDatabase);
 
+            //根据xml文件的配置，设置日志文件
             XmlElement elementLog = (XmlElement)xmlDoc.SelectSingleNode("configuration/log");
             logFileName = elementLog.GetAttribute("path");
             
+            //根据xml文件的配置决定用哪种通信方式
             if (method.ToLower() == "socket")
             {
-                setUpSocket(elementConnection);
+                SetUpSocket(elementConnection);
             }
             else if (method.ToLower() == "serialport")
             {
-                setUpSerialPort(elementConnection);
+                SetUpSerialPort(elementConnection);
             }
         }
 
+        //设置数据库连接
         private void SetUpDatabase(XmlElement element)
         {
             string connStr = "Provider=Microsoft.ACE.OLEDB.12.0 ;Data Source=" + element.GetAttribute("dataSource");
@@ -70,7 +74,9 @@ namespace ChatProgram
             tableName = element.GetAttribute("tableName");
             conn.Open();
         }
-        private void setUpSocket(XmlElement ele)
+
+        //设置套接字
+        private void SetUpSocket(XmlElement ele)
         {
             string ipStr = ele.GetAttribute("localIp");
             string remoteIpStr = ele.GetAttribute("remoteIp");
@@ -80,10 +86,10 @@ namespace ChatProgram
             port = Convert.ToInt32(ele.GetAttribute("localPort"));
             remotePort = Convert.ToInt32(ele.GetAttribute("remotePort"));
             servSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-            this.SetUpSocketServer();
+            SetUpSocketServer();
         }
 
-        private void setUpSerialPort(XmlElement ele)
+        private void SetUpSerialPort(XmlElement ele)
         {
             comm = new Comm();
             comm.serialPort.PortName = ele.GetAttribute("portName").ToUpper();
