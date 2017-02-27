@@ -86,8 +86,6 @@ namespace ChatProgram
         private void setUpSerialPort(XmlElement ele)
         {
             comm = new Comm();
-            //ConfigClass config = new ConfigClass();
-            //comm.serialPort.PortName = config.ReadConfig("SendHealCard");
             comm.serialPort.PortName = ele.GetAttribute("portName").ToUpper();
             //波特率
             comm.serialPort.BaudRate = Convert.ToInt32(ele.GetAttribute("baudRate"));
@@ -104,6 +102,7 @@ namespace ChatProgram
 
             if (comm.IsOpen)
             {
+                // Comm类用线程去轮询Read串口，每0.1秒读一次。
                 comm.DataReceived += new Comm.EventHandle(comm_DataReceived);
             }
         }
@@ -117,8 +116,6 @@ namespace ChatProgram
         {
             string textToBeSent = messageBox.Text;
             messageBox.Text = "";
-            //SetUpSocketServer();
-            //SendCardToOut();
             if (method.ToLower() == "socket")
             {
                 ClientSendMessage(textToBeSent);
@@ -185,8 +182,6 @@ namespace ChatProgram
                 WriteLogFile(e.Message);
             }
 
-            //int receiveLength = clieSocket.Receive(result);
-            //Console.WriteLine("Get server message {0}", Encoding.ASCII.GetString(result, 0, receiveLength));
             try
             {
                 clieSocket.Send(Encoding.UTF8.GetBytes(text));
@@ -197,8 +192,6 @@ namespace ChatProgram
             catch (Exception e)
             {
                 clieSocket.Shutdown(SocketShutdown.Both);
-                //clieSocket.Close();
-                //Console.WriteLine(e.Message);
                 WriteLogFile(e.Message);
             }
         }
@@ -221,6 +214,8 @@ namespace ChatProgram
                     servSocket.ReceiveTimeout = -1;
                     Socket clientSocket = servSocket.Accept();
                     clientSocket.Send(Encoding.UTF8.GetBytes("Hello from server"));
+                    
+                    //另外两种构思 thread中套thread保证非阻塞，事实证明不必要
                     //Thread receiveThread = new Thread(this.ReceiveMessage);
                     //receiveThread.Start(clientSocket);
                     //ReceiveMessage(clientSocket);
@@ -249,13 +244,11 @@ namespace ChatProgram
                     int receiveNumber = myClientSocket.Receive(result);
                     string resultStr = Encoding.UTF8.GetString(result, 0, receiveNumber);
                     WriteLogFile(String.Format("Got {0} messages from address {1}", resultStr, myClientSocket.RemoteEndPoint.ToString()));
-                    //ReceiveMessageEvent(new ConnectUI(), Encoding.ASCII.GetString(result, 0, receiveNumber));
                     UpdateMessageBoard(resultStr, true);
                     UpdateAccess(resultStr, 2, 1);
                     Application.DoEvents();
                 } catch (Exception ex) {
                     WriteLogFile(ex.Message);
-                    //myClientSocket.Shutdown(SocketShutdown.Both);
                     myClientSocket.Close();
                     break;
                 }
@@ -293,55 +286,6 @@ namespace ChatProgram
             catch (Exception e)
             {
                 WriteLogFile(e.Message);
-            }
-        }
-
-        private void comm_DataReceived2(byte[] readBuffer1)
-        {
-            //log.Info(HexCon.ByteToString(readBuffer));
-            if (readBuffer1.Length == 1)
-            {
-                //receive = HealCardClass.ByteToString(readBuffer1);
-                string receive = Encoding.UTF8.GetString(readBuffer1); 
-                //string str = "06";
-                //if (string.Equals(receive.Trim(), str, StringComparison.CurrentCultureIgnoreCase))
-                //{
-                //    try
-                //    {
-                //        if (is_read_card)
-                //        {
-                //            byte[] send = new byte[1];
-                //            send[0] = 0x05;
-                //            comm.WritePort(send, 0, send.Length);
-                //            Thread.Sleep(500);
-                //            comm.DataReceived -= new Comm.EventHandle(comm_DataReceived);
-                //            InitReadComm();
-                //        }
-                //        if (sendCardToOut)
-                //        {
-                //            byte[] send = new byte[1];
-                //            send[0] = 0x05;
-                //            comm.WritePort(send, 0, send.Length);
-
-
-                //            readComm.DataReceived -= new Comm.EventHandle(readComm_DataReceived);
-                //            readComm.Close();
-
-                //            //log.Info("发卡完成！");
-                //            //lblMsg.Text = "发卡成功！";
-                //            //lblSendCardMsg.Text = "发卡完成，请收好卡！";
-                //            //timer1.Tick -= new EventHandler(timer1_Tick);
-
-                //        }
-                //    }
-                //    catch (Exception ex)
-                //    {
-                //        log.Info(ex.ToString());
-                //    }
-                //}
-                WriteLogFile(String.Format("Got {0} messages from other port", receive));
-                UpdateMessageBoard(receive, true);
-                  
             }
         }
 
@@ -431,12 +375,12 @@ namespace ChatProgram
             myPen = new Pen(Color.Red, 2);
             g.DrawLine(myPen, centerPoint, hourPoint);
 
-            Font myFont = new Font("Arial", 5, FontStyle.Bold);
+            Font myFont = new Font("Arial", 12, FontStyle.Bold);
             SolidBrush whiteBrush = new SolidBrush(Color.Blue);
-            //g.DrawString("12", myFont, whiteBrush, 23, 2);
-            //g.DrawString("6", myFont, whiteBrush, 25, 45);
-            //g.DrawString("3", myFont, whiteBrush, 46, 27);
-            //g.DrawString("9", myFont, whiteBrush, 2, 27);
+            g.DrawString("12", myFont, whiteBrush, 513, 53);
+            g.DrawString("6", myFont, whiteBrush, 520, 183);
+            g.DrawString("3", myFont, whiteBrush, 583, 118);
+            g.DrawString("9", myFont, whiteBrush, 453, 118);
         }
 
         private void UpdateAccess(string text, int sendOrReceive, int socketOrComm)
@@ -471,8 +415,6 @@ namespace ChatProgram
                     }
                 }
                
-                //string sender = method.ToLower() == "socket" ? ip.ToString() + ":" + port.ToString() : comm.serialPort.PortName;
-                //string recipient = method.ToLower() == "socket" ? remoteIp.ToString() + ":" + remotePort.ToString() : "";
                 string insertSQL = String.Format("Insert into {0} ([content], [timestamp], [sender], [recipient], [sendOrReceive], [transmission]) values('{1}', '{2}', '{3}', '{4}', {5}, {6})",
                     tableName,
                     text,
