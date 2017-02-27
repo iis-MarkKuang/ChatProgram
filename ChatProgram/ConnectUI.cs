@@ -118,6 +118,7 @@ namespace ChatProgram
             messageBox.Text = "";
             if (method.ToLower() == "socket")
             {
+                MaintainClientConnect();
                 ClientSendMessage(textToBeSent);
             }
             else if (method.ToLower() == "serialport")
@@ -125,6 +126,8 @@ namespace ChatProgram
                 PortSendMessage(textToBeSent);
             }
         }
+
+        //判断是否还连接
         public static bool IsSocketConnected(Socket s)
         {
             #region remarks
@@ -154,7 +157,7 @@ namespace ChatProgram
             #endregion
         }
 
-        private void ClientSendMessage(string text)
+        private void MaintainClientConnect()
         {
             try
             {
@@ -172,7 +175,7 @@ namespace ChatProgram
                     clieSocket.Close();
 
                     clieSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                
+
                     clieSocket.Connect(new IPEndPoint(remoteIp, remotePort));
                     WriteLogFile("Connected to server success");
                 }
@@ -181,7 +184,10 @@ namespace ChatProgram
             {
                 WriteLogFile(e.Message);
             }
+        }
 
+        private void ClientSendMessage(string text)
+        {
             try
             {
                 clieSocket.Send(Encoding.UTF8.GetBytes(text));
@@ -299,6 +305,7 @@ namespace ChatProgram
         
         }
 
+        //更新信息历史记录文本框
         private void UpdateMessageBoard(String text, bool receive)
         {
             if (this.history.InvokeRequired)
@@ -383,6 +390,7 @@ namespace ChatProgram
             g.DrawString("9", myFont, whiteBrush, 453, 118);
         }
 
+        //更新Access数据库
         private void UpdateAccess(string text, int sendOrReceive, int socketOrComm)
         {
             try
@@ -432,6 +440,7 @@ namespace ChatProgram
             }
         }
 
+        //释放资源
         private void ConnectUI_FormClosed(object sender, FormClosedEventArgs e)
         {
             conn.Close();
@@ -442,6 +451,7 @@ namespace ChatProgram
             }
         }
 
+        // 写入日志文件
         private void WriteLogFile(string content)
         {
             byte[] contentByte = System.Text.Encoding.UTF8.GetBytes(DateTime.Now.ToString() + "  " + content + "\r\n");
