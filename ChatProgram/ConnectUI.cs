@@ -35,6 +35,7 @@ namespace ChatProgram
         private static string logFileName;
         private static string method;
         private static Thread serverThread;
+        private static Thread clientThread;
 
         public ConnectUI()
         {
@@ -88,6 +89,10 @@ namespace ChatProgram
             remotePort = Convert.ToInt32(ele.GetAttribute("remotePort"));
             servSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             SetUpSocketServer();
+
+            clientThread = new Thread(MaintainClientConnect);
+            clientThread.IsBackground = true;
+            clientThread.Start();
         }
 
         private void SetUpSerialPort(XmlElement ele)
@@ -125,7 +130,6 @@ namespace ChatProgram
             messageBox.Text = "";
             if (method.ToLower() == "socket")
             {
-                MaintainClientConnect();
                 ClientSendMessage(textToBeSent);
             }
             else if (method.ToLower() == "serialport")
@@ -134,7 +138,7 @@ namespace ChatProgram
             }
         }
 
-        //判断是否还连接
+        //判断是否还连接，因为Socket.connected有一个known bug
         public static bool IsSocketConnected(Socket s)
         {
             #region remarks
@@ -166,31 +170,48 @@ namespace ChatProgram
 
         private void MaintainClientConnect()
         {
-            try
+            while (true)
             {
-                if (clieSocket == null)
+                try
                 {
-                    clieSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-                    clieSocket.Connect(new IPEndPoint(remoteIp, remotePort));
+                    if (clieSocket == null)
+                    {
+                        clieSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+                        clieSocket.Connect(new IPEndPoint(remoteIp, remotePort));
+                        WriteLogFile("Initialize client socket and make first connection to server " + DateTime.Now.ToString() + "\r\n");
+                    }
+                    else if (!clieSocket.Connected && !IsSocketConnected(clieSocket))
+                    {
+                        //注释这两行是因为 只需释放clieSocket，就不会重连时被要求BeginConnect并到另一端口
+                        //在connected为false的时候再去shutdown和disconnect，会报错“提供了一个无效的参数”
+                        //clieSocket.Shutdown(SocketShutdown.Both);
+                        //clieSocket.Disconnect(true);
+                        
+                        //重连的时候不允许在界面上进行操作
+                        lock(this)
+                        {
+                            clieSocket.Close();
+                            clieSocket = null;
+                            clieSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
 
+                            clieSocket.Connect(new IPEndPoint(remoteIp, remotePort));
+                            WriteLogFile("Reconnected to server success " + DateTime.Now.ToString() + "\r\n");
+                        }   
+                    }
+                    else
+                    {
+                        WriteLogFile("Heartbeat detected the connection is live " + DateTime.Now.ToString() + "\r\n");
+                    }
+                     
+                    //5秒重连一次
+                    Thread.Sleep(5000);
                 }
-                if (!clieSocket.Connected && !IsSocketConnected(clieSocket))
+                catch (Exception e)
                 {
-                    clieSocket.Shutdown(SocketShutdown.Both);
-
-                    clieSocket.Disconnect(true);
-                    clieSocket.Close();
-
-                    clieSocket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
-
-                    clieSocket.Connect(new IPEndPoint(remoteIp, remotePort));
-                    WriteLogFile("Connected to server success");
+                    WriteLogFile(e.Message);
                 }
             }
-            catch (Exception e)
-            {
-                WriteLogFile(e.Message);
-            }
+            
         }
 
         private void ClientSendMessage(string text)
@@ -222,26 +243,33 @@ namespace ChatProgram
         {
             while (true)
             {
-                if (servSocket.IsBound)
+                try
                 {
-                    servSocket.Listen(10);
-                    servSocket.ReceiveTimeout = -1;
-                    Socket clientSocket = servSocket.Accept();
-                    clientSocket.Send(Encoding.UTF8.GetBytes("Hello from server"));
-                    
-                    //另外两种构思 thread中套thread保证非阻塞，事实证明不必要
-                    //Thread receiveThread = new Thread(this.ReceiveMessage);
-                    //receiveThread.Start(clientSocket);
-                    //ReceiveMessage(clientSocket);
+                    if (servSocket.IsBound)
+                    {
+                        servSocket.Listen(10);
+                        servSocket.ReceiveTimeout = -1;
+                        Socket clientSocket = servSocket.Accept();
+                        clientSocket.Send(Encoding.UTF8.GetBytes("Hello from server"));
 
-                    //new Thread(() =>
-                    //    {
-                    //        UpdateMessageBoard<Socket> u = new UpdateMessageBoard<Socket>(ReceiveMessage);
-                    //        Invoke(u, clientSocket);
-                    //    }).Start();
-                    ReceiveMessage(clientSocket);
-                
+                        //另外两种构思 thread中套thread保证非阻塞，事实证明不必要
+                        //Thread receiveThread = new Thread(this.ReceiveMessage);
+                        //receiveThread.Start(clientSocket);
+                        //ReceiveMessage(clientSocket);
+
+                        //new Thread(() =>
+                        //    {
+                        //        UpdateMessageBoard<Socket> u = new UpdateMessageBoard<Socket>(ReceiveMessage);
+                        //        Invoke(u, clientSocket);
+                        //    }).Start();
+                        ReceiveMessage(clientSocket);
+                    }
                 }
+                catch (Exception e)
+                {
+                    WriteLogFile(e.Message);
+                }
+                
             }
         }
 
@@ -254,7 +282,7 @@ namespace ChatProgram
             {
                 try
                 {
-                    myClientSocket.ReceiveTimeout = -1;
+                    myClientSocket.ReceiveTimeout = 5000;
                     int receiveNumber = myClientSocket.Receive(result);
                     string resultStr = Encoding.UTF8.GetString(result, 0, receiveNumber);
                     WriteLogFile(String.Format("Got {0} messages from address {1}", resultStr, myClientSocket.RemoteEndPoint.ToString()));
@@ -264,6 +292,7 @@ namespace ChatProgram
                 } catch (Exception ex) {
                     WriteLogFile(ex.Message);
                     myClientSocket.Close();
+                    Thread.Sleep(5000);
                     break;
                 }
             }
@@ -456,10 +485,12 @@ namespace ChatProgram
             {
                 clieSocket.Close();
                 servSocket.Close();
-                serverThread.Join();
+                serverThread.Abort();
+                clientThread.Abort();
                 clieSocket = null;
                 servSocket = null;
                 serverThread = null;
+                clientThread = null;
             }
         }
 

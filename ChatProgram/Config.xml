@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <configuration>
   <!--<connection method ="serialPort" portName ="COM3" baudRate ="9600" dataBits ="8" stopBits ="System.IO.Ports.StopBits.One" parity ="System.IO.Ports.Parity.None" readTimeout ="100" writeTimeout ="50" />-->  
-  <connection method ="socket" localIp ="127.0.0.1" localPort ="8083" remoteIp ="127.0.0.1" remotePort="8083"/>
+  <connection method ="socket" localIp ="127.0.0.1" localPort ="8081" remoteIp ="127.0.0.1" remotePort="8081"/>
   <database type ="Access" dataSource ="D:/Documents/Database1.accdb" tableName ="Messages" />
   <log path="log.txt" />
 </configuration>
