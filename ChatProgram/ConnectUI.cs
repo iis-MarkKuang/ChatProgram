@@ -286,7 +286,7 @@ namespace ChatProgram
             try
             {
                 string receive = Encoding.UTF8.GetString(readBuffer1);
-                WriteLogFile(String.Format("Got {0} messages from other port", receive));
+                WriteLogFile(String.Format("Got {0} messages from other serial port", receive));
                 UpdateAccess(receive, 2, 2);
                 UpdateMessageBoard(receive, true);
             }
@@ -465,8 +465,11 @@ namespace ChatProgram
         private void ConnectUI_FormClosed(object sender, FormClosedEventArgs e)
         {
             conn.Close();
-            clieSocket.Close();
-            servSocket.Close();
+            if (method.ToLower() == "socket")
+            {
+                clieSocket.Close();
+                servSocket.Close();
+            }
         }
 
         private void WriteLogFile(string content)

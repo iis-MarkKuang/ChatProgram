@@ -6,3 +6,11 @@ d:\documents\visual studio 2012\Projects\ChatProgram\ChatProgram\obj\Debug\ChatP
 d:\documents\visual studio 2012\Projects\ChatProgram\ChatProgram\obj\Debug\ChatProgram.csproj.GenerateResource.Cache
 d:\documents\visual studio 2012\Projects\ChatProgram\ChatProgram\obj\Debug\ChatProgram.exe
 d:\documents\visual studio 2012\Projects\ChatProgram\ChatProgram\obj\Debug\ChatProgram.pdb
+D:\ChatProgram\ChatProgram\bin\Debug\ChatProgram.exe.config
+D:\ChatProgram\ChatProgram\obj\Debug\ChatProgram.exe
+D:\ChatProgram\ChatProgram\obj\Debug\ChatProgram.pdb
+D:\ChatProgram\ChatProgram\bin\Debug\ChatProgram.exe
+D:\ChatProgram\ChatProgram\bin\Debug\ChatProgram.pdb
+D:\ChatProgram\ChatProgram\obj\Debug\ChatProgram.ConnectUI.resources
+D:\ChatProgram\ChatProgram\obj\Debug\ChatProgram.Properties.Resources.resources
+D:\ChatProgram\ChatProgram\obj\Debug\ChatProgram.csproj.GenerateResource.Cache
