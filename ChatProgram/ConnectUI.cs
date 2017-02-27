@@ -34,6 +34,7 @@ namespace ChatProgram
         private static string tableName;
         private static string logFileName;
         private static string method;
+        private static Thread serverThread;
 
         public ConnectUI()
         {
@@ -212,8 +213,9 @@ namespace ChatProgram
         {
             servSocket.Bind(new IPEndPoint(ip, port));
             WriteLogFile(String.Format("Listen {0} successful", servSocket.LocalEndPoint.ToString()));
-            Thread myThread = new Thread(new ThreadStart(this.ListenClientConnect));
-            myThread.Start();
+            serverThread = new Thread(new ThreadStart(this.ListenClientConnect));
+            serverThread.IsBackground = true;
+            serverThread.Start();
         }
 
         private void ListenClientConnect()
@@ -454,6 +456,10 @@ namespace ChatProgram
             {
                 clieSocket.Close();
                 servSocket.Close();
+                serverThread.Join();
+                clieSocket = null;
+                servSocket = null;
+                serverThread = null;
             }
         }
 
