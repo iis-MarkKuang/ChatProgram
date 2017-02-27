@@ -6,7 +6,6 @@
 *.cache
 *.exe.config
 *.exe.manifest
-*.csproj
 
 # User-specific files
 *.suo
