@@ -204,7 +204,7 @@ namespace ChatProgram
                     }
                      
                     //5秒重连一次
-                    Thread.Sleep(5000);
+                    Thread.Sleep(100);
                 }
                 catch (Exception e)
                 {
@@ -282,7 +282,7 @@ namespace ChatProgram
             {
                 try
                 {
-                    myClientSocket.ReceiveTimeout = 5000;
+                    myClientSocket.ReceiveTimeout = -1;
                     int receiveNumber = myClientSocket.Receive(result);
                     string resultStr = Encoding.UTF8.GetString(result, 0, receiveNumber);
                     WriteLogFile(String.Format("Got {0} messages from address {1}", resultStr, myClientSocket.RemoteEndPoint.ToString()));

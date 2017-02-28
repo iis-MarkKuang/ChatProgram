@@ -6,6 +6,7 @@
 *.cache
 *.exe.config
 *.exe.manifest
+*.xml
 
 # User-specific files
 *.suo
