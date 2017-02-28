@@ -202,9 +202,11 @@ namespace ChatProgram
                     {
                         WriteLogFile("Heartbeat detected the connection is live " + DateTime.Now.ToString() + "\r\n");
                     }
-                     
-                    //5秒重连一次
-                    Thread.Sleep(100);
+
+                    lock (this)
+                    {
+                        Thread.Sleep(100);
+                    }
                 }
                 catch (Exception e)
                 {
